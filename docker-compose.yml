@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  mi-aplicacion:
+    build: .
+    container_name: contenedor_produccion_app
+    restart: always

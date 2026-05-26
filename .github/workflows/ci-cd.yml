@@ -1,0 +1,52 @@
+name: "Pipeline Automatizado - Bryan Steven"
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # 🧪 FASE 1: CONTROL DE CALIDAD
+  verificacion-codigo:
+    name: "Linter (Ruff) y Pruebas (Pytest)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Clonando repositorio"
+        uses: actions/checkout@v4
+
+      - name: "Inicializando Python 3.11"
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: "Instalando dependencias"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "Validando sintaxis con Ruff"
+        run: ruff check .
+
+      - name: "Corriendo pruebas"
+        run: pytest
+
+  # 🐳 FASE 2: DESPLIEGUE A DOCKER HUB
+  subir-a-dockerhub:
+    name: "Construir y Subir Imagen a Docker Hub"
+    needs: verificacion-codigo
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Clonando repositorio"
+        uses: actions/checkout@v4
+
+      - name: "Autenticando en Docker Hub"
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: "Construyendo y Subiendo la Imagen"
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: whoissteven/mi-app-python:latest
